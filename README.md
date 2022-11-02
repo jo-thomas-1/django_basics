@@ -23,10 +23,14 @@ An app is a web application that does something – e.g., a blog system, a datab
 
 <hr>
 
+## App
+
 - to create an app use code `python manage.py startapp [app_name]`
 - add the app name `[app_name]` in the `INSTALLED_APPS` list in `settings.py` file of project
 
 <hr>
+
+## View
 
 - views are basically the content that is send in response to a request
 - in the app folder go to `views.py` and create function for the view required
@@ -77,7 +81,9 @@ Now the main project is linked to urls in test_app via `path('', include('test_a
 
 <hr>
 
-The next component that comes is a template. A template is basically an HTML file which is to be rendered by the view functions.
+## Template
+
+A template is basically an HTML file which is to be rendered by the view functions.
 
 - templates are created and stored as normal html files by creating a folder named `templates` inside the corresponding app folder
 - django can auto detect these files as the name `templates` is a part of the file structure
@@ -90,3 +96,46 @@ The next component that comes is a template. A template is basically an HTML fil
 def hello_world(request):
 	return render(request, 'hello.html')
 ```
+<hr>
+
+## Passing Values
+
+- this is used to place dynamic/calculated content in the page
+- it is done through the view functions in `views.py` file of each app
+- the required values are passed as a third argument in the render function in dictionary format
+- eg: `render(request, 'hello.html', {'key': value})`
+- Jinja format is used to mark the placeholder in the template html file
+- eg: `<h2>This is a template page - {{key}} - with the placeholder</h2>`
+
+```
+def hello_world(request):
+    keyword = "tester"
+    return render(request, 'hello.html', {'keyword': keyword})
+```
+
+### Passing values to another page
+
+- add html code that transferes values to other pages. for example a form.
+- for action attribute, a url is provided, not direct html page path
+
+```
+<form method="GET" action="add">
+    <input type="text" name="num_one">
+    <input type="text" name="num_two">
+    <input type="submit">
+</form>
+```
+
+- add the view function to handle the specified path
+- this can be with the HttpResponse or render functions as required
+- read the passed values with GET or POST parameters
+
+```
+def pass_value(request):
+    value_1 = int(request.GET['num_one'])
+    value_2 = int(request.GET['num_two'])
+
+    return render(request, 'hello.html', {'keyword': value_1 + value_2})
+```
+
+- update the path to `urls.py` - `path('add', views.pass_value, name='test_app_pass_value')`

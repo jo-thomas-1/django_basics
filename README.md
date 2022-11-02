@@ -61,6 +61,8 @@ urlpatterns = [
 ]
 ```
 
+## URL's
+
 - now this configuration needs to be linked to the main project urls
 - add app urls to the `urlpatterns` in `urls.py` in main project folder
 - as this is another url configuration, just as mentioned in the documentation
@@ -96,6 +98,7 @@ A template is basically an HTML file which is to be rendered by the view functio
 def hello_world(request):
 	return render(request, 'hello.html')
 ```
+
 <hr>
 
 ## Passing Values
@@ -139,3 +142,11 @@ def pass_value(request):
 ```
 
 - update the path to `urls.py` - `path('add', views.pass_value, name='test_app_pass_value')`
+
+## Example Projects
+
+| # | Name | Action |
+|---|---|---|
+| 1 | Views & Templates | [Go to code](https://github.com/jothomas1996/django-view-template) |
+| 2 | URL's | [Go to code](https://github.com/jothomas1996/django-site-urls) |
+| 3 | Passing values between pages | [Go to code](https://github.com/jothomas1996/django-pass-value-page) |

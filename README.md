@@ -181,7 +181,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     - user uploaded file may replace a static file accidentally
 
 - it is also better to provide the debug settings when setting up the static folder
-- for this the code is provided in the `settings.py` file in the project folder
+- for this the code is provided in the `urls.py` file in the project folder
 
 ```
 from django.conf.urls.static import static
@@ -192,7 +192,133 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 ```
 
+## Model
+
+A Django model is the built-in feature that Django uses to create tables, their fields, and various constraints. It is a Python class that inherits from the Model class. Django web applications access and manage data through these Python objects. SQL (Structured Query Language) is complex and involves a lot of different queries for creating, deleting, updating or any other stuff related to database. Django models simplify the tasks and organize tables into models. Generally, each model maps to a single database table. Models define the structure of stored data, including the field types and possibly also their maximum size, default values, selection list options, help text for documentation, label text for forms, etc.
+
+- each model is a Python class that subclasses `django.db.models.Model`
+- each attribute of the model represents a database field
+- Django provides an automatically-generated database-access API
+
+---
+
+- the tables to store data are created in the `models.py` file in the specific app folder
+- as mentioned above, each model is a Python class that subclasses `django.db.models.Model`
+- to create a new model, create class `class [Model_name](models.Model):`
+- each entity or coulumn in the table is given as a new variable in this class
+- based on requirement, each of them can be set to a specific field type
+- specific packages may be needed to be installed to use some field types (for example, image field requires the pillow package)
+
+```
+from django.db import models
+
+# Create your models here.
+class Place(models.Model):
+    name = models.CharField(max_length=250)
+    image = models.ImageField(upload_to='pics')
+    desc = models.TextField()
+```
+
+- a string function can be added in the class to get displays in preferred mode
+
+```
+from django.db import models
+
+# Create your models here.
+class Place(models.Model):
+    name = models.CharField(max_length=250)
+    image = models.ImageField(upload_to='pics')
+    desc = models.TextField()
+
+    def __str__(self):
+        return self.name
+```
+
+- whenever a change in made in the `models.py` file, before running server run the command,
+    - `python manage.py makemigrations` to pack up model changes and prepare to be applied (we can verify this step by checking the new file that has been created in the `migrations` folder)
+    - `python manage.py migrate` to apply the changes (make sure to keep the database system on before execution)
+
+- to view the tables in a database system, go to the `DATABASES` list in the `settings.py` file in project folder
+- here change the `ENGINE` value to the preferred system (for example, mysql)
+- usually the default value is `django.db.backends.sqlite3`
+- update the `NAME` value to the preferred database name (a database with the name specified must already be created in the database system) - default value `BASE_DIR / 'db.sqlite3'`
+- create new key value pairs to store account credentials
+
+- below is the code for connecting with XAMPP SQL
+- `mysqlclient` package will be required here
+
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'django_models',
+        'USER': 'root',
+        'PASSWORD': ''
+    }
+}
+```
+
+- the tables can also be accessed through the django admin panel
+- when viewing the database it can be seen that django also automatically creates other tables that may be required by the system
+
+## Admin Panel
+
+- django provides a builtin admin panel
+- it reads metadata from your models to provide a quick, model-centric interface where trusted users can manage content on your site
+- url to admin panel is by default `admin\` - the same can be checked in the `urls.py` file in project folder
+- to set the admin account credentials use command `python manage.py createsuperuser` and provide values as required
+- the admin account will have a variety of options by which the project can be modified
+
+- to be able to access project tables, they first need to be connected to the admin panel
+- import the created models to the `admin.py` file as `from . models import Model_name`
+- the imported models also needs to be registered
+
+```
+from django.contrib import admin
+from . models import Model_name
+
+# Register your models here.
+admin.site.register(Model_name)
+```
+
+## Dynamic Data
+
+- to connect the data in the database to website, django uses ORM
+- ORM (Object Relational Mapper) is used to send data between a database and models in an application. It maps a relation between the database and a model. So, ORM maps object attributes to fields of a table.
+- ORM helps to convert data from a relational database system to object oriented system
+
+- for this first import the models to the views file of the specific app `from . models import Model_name`
+- to fetch all the data in model use code `Model_name.objects.all()`
+- now the fetched values can be passed to the HTML files via render function
+
+```
+from django.shortcuts import render
+from . models import Model_name
+
+# Create your views here.
+
+def home(request):
+    obj = Model_name.objects.all()
+
+    return render(request, 'index.html', {'key': obj})
+```
+
+- make sure to insert placeholders as required
+- if media urls have not been set, `.url` must be provided for image objects
+
+```
+{% for i in places %}
+<div class="col-lg-4">
+    <img src="{{ i.image.url }}" alt="">
+    <h1 class="">{{ i.name }}</h1>
+    <p>{{ i.desc }}</p>
+</div>
+{% endfor %}
+```
+
 ## Example Projects
+
+The following are some sample projects created based on the above documentation.
 
 | # | Name | Action |
 |---|---|---|
@@ -200,3 +326,4 @@ if settings.DEBUG:
 | 2 | URL's | [Go to code](https://github.com/jothomas1996/django-site-urls) |
 | 3 | Passing values between pages | [Go to code](https://github.com/jothomas1996/django-pass-value-page) |
 | 4 | Static Site | [Go to code](https://github.com/jothomas1996/django-static-site) |
+| 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |

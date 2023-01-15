@@ -316,6 +316,174 @@ def home(request):
 {% endfor %}
 ```
 
+## Account Handling
+
+- a combination of steps mentioned in the sections of models and admin panel is used to set this up
+- creating a new database is not necessary as django automatically creates a `auth_user` table
+- create a registration form in the app HTML page
+- for forms with POST method a CSRF (Cross Site Request Forgery) token is required - place the token `{% csrf_token %}` at the start of the form
+
+```
+<form method="POST" action="">
+    {% csrf_token %}
+    <input type="text" name="first_name" placeholder="First Name">
+    <input type="text" name="last_name" placeholder="Last Name">
+    <input type="text" name="username" placeholder="Username">
+    <input type="email" name="email" placeholder="Email">
+    <input type="password" name="password" placeholder="Password">
+    <input type="password" name="conf_password" placeholder="Confirm Password">
+    <input type="submit" name="submit" value="Register">
+</form>
+```
+
+- the already existing user data in `auth_user` table can be viewed through the linked datbase system or via django admin page
+- update the function in `views.py` to handle incoming form data
+- once the form data is recieved, execute input validations and register data to the database using `User.objects.create_user()` function
+- the parameters of this function are simply the column headings of the `auth_user` table
+
+```
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.shortcuts import redirect
+
+# Create your views here.
+
+def register(request):
+    if request.method == 'POST':
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+        conf_password = request.POST['conf_password']
+
+        # validate password and confirm password
+        if password == conf_password:
+            # check if username already exists
+            if User.objects.filter(username=username).exists():
+                messages.info(request, "Username " + username + " is already taken")
+                return redirect('register')
+            # check if email already exists
+            elif User.objects.filter(email=email).exists():
+                messages.info(request, "Email already registered")
+                return redirect('register')
+            else:
+                user = User.objects.create_user(username=username, first_name=first_name, last_name=last_name, email=email, password=password)
+                user.save()
+                messages.info(request, "Account for " + first_name + " has been registered")
+                return redirect('register')
+        else:
+            messages.info(request, "Password and confirm password fields do no match")
+            return redirect('register')
+
+    return render(request, 'register.html')
+```
+
+- iterate through messages to view them on the HTML page
+
+```
+{% for msg in messages %}
+    <h4>{{ msg }}</h4>
+{% endfor %}
+```
+
+### Account Login
+
+- create corresponding HTML files, views and urls for the login page
+
+```
+<form method="POST" action="#">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username">
+    <br><br>
+    <input type="password" name="password" placeholder="Password">
+    <br><br>
+    <input type="submit" name="submit" value="Login">
+</form>
+{% for msg in messages %}
+<h4>{{ msg }}</h4>
+{% endfor %}
+```
+- impliment authentication fnctionality in views
+
+```
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.contrib.auth.models import User
+from django.contrib import messages, auth
+from django.shortcuts import redirect
+
+def login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+
+        user = auth.authenticate(username=username, password=password)
+        user.save()
+
+        if user is not None:
+            auth.login(request, user)
+            return redirect('/')
+        else:
+            messages.info(request, "Invalid username or password")
+            return redirect('login')
+
+    return render(request, 'login.html')
+```
+
+- the `is_authenticated` menthod can be used to check if login authentication has been done and make changes accordingly
+
+```
+<hr>
+{% if user.is_authenticated %}
+<h4>Hello {{ user.username }}</h4>
+<a href="/account/logout/">Logout</a>
+{% else %}
+<a href="account/register/">Register</a>
+<a href="/account/login/">Login</a>
+{% endif %}
+<hr>
+```
+
+### Account Logout
+
+- create corresponding function in views for logout
+
+```
+def logout(request):
+    auth.logout(request)
+    return redirect('/')
+```
+
+- link the function to urls
+
+```
+from django.urls import path
+from . import views # importing views module from current folder
+
+urlpatterns = [
+    path('register/', views.register, name='register'),
+    path('login/', views.login, name='login'),
+    path('logout/', views.logout, name='logout')
+]
+```
+
+- make necessary updates to other contents
+
+```
+<hr>
+{% if user.is_authenticated %}
+<h4>Hello {{ user.username }}</h4>
+<a href="/account/logout/">Logout</a>
+{% else %}
+<a href="account/register/">Register</a>
+<a href="/account/login/">Login</a>
+{% endif %}
+<hr>
+```
+
 ## Example Projects
 
 The following are some sample projects created based on the above documentation.

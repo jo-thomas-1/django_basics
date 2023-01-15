@@ -95,6 +95,57 @@ def hello_world(request):
 	return render(request, 'hello.html')
 ```
 
+### Base Template
+
+- Django provides the option of a base template
+- this base framework can then to implimented to all other pages as needed
+- the html pages where the same basic format is required, will be extended from this base template
+- first create a base template html file (eg: base.html)
+- use placeholders to specify where other blocks/contents will be placed
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+    <head>
+        <meta charset="UTF-8">
+        <title>Movie App</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+    </head>
+    <body>
+        <nav class="navbar">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Pricing</a>
+                </li>
+            </ul>
+        </nav>
+
+        {% block body %}
+            <!-- blocks specified as 'body' will be placed here -->
+        {% endblock %}
+    </body>
+</html>
+```
+
+- extend this template in all the new HTML files where this same base format is required
+
+```
+{% extends 'base.html' %}
+{% block body %}
+    <h1>Heading</h1>
+    <!-- all elements as required -->
+{% endblock %}
+```
+
 ## Passing Values
 
 - this is used to place dynamic/calculated content in the page
@@ -136,6 +187,52 @@ def pass_value(request):
 ```
 
 - update the path to `urls.py` - `path('add', views.pass_value, name='test_app_pass_value')`
+
+### Passing values in URL
+
+- placeholders can be used in url's in situations where the users input in not fixed
+- in the below example, when user enters the url, any value can be given after `movie/`
+- this value can be passed to the corresponding view function as an argument
+
+```
+path('movie/<int:movie_id>', views.details, name='details')
+```
+
+```
+def details(request, movie_id):
+    return render(request, 'details.html')
+```
+
+- hyperlinks to this page in basic form is as follows
+
+```
+<a href="movie/{{ i.id }}"><h3 class="">{{ i.name }}</h3></a>
+```
+
+- however, the url must be specified in the below formt using the name given for the url
+
+```
+<a href="{% url 'details' i.id %}"><h3 class="">{{ i.name }}</h3></a>
+```
+
+- namespaces are used along with the same to avoid confusion
+- they are registered in the `urls.py` file of the corresponding app as the variable `app_name`
+
+```
+<a href="{% url 'movieapp:details' i.id %}"><h3 class="">{{ i.name }}</h3></a>
+```
+
+```
+from django.urls import path
+from . import views # importing views module from current folder
+
+app_name = "movieapp"
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('movie/<int:movie_id>', views.details, name='details')
+]
+```
 
 ## Static Files / Assets
 
@@ -316,6 +413,12 @@ def home(request):
 {% endfor %}
 ```
 
+- to read a specific data from the database, the get function can be used
+
+```
+obj = Model_name.objects.get(preferred_key_name=preferred_id)
+```
+
 ## Account Handling
 
 - a combination of steps mentioned in the sections of models and admin panel is used to set this up
@@ -484,6 +587,76 @@ urlpatterns = [
 <hr>
 ```
 
+## CRUD Operations
+
+- creating, reading, updating and deleting data in database
+
+### Create / Add New Data
+
+- create the HTML file with the form to accept data from user
+
+```
+<div class="container mt-3">
+    <h2 class="mb-3">Add Movie</h2>
+
+    <form class="mb-3" method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <label for="name" class="col-sm-2 col-form-label">Name</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="name" id="name">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="year" class="col-sm-2 col-form-label">Year</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="year" id="year">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="image" class="col-sm-2 col-form-label">Poster</label>
+            <div class="col-sm-10">
+                <input type="file" class="form-control" name="image" id="image">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="desc" class="col-sm-2 col-form-label">Description</label>
+            <div class="col-sm-10">
+                <textarea class="form-control" name="desc" id="desc" rows="4"></textarea>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+<div class="container">
+    <div>
+        {% for msg in messages %}
+            <h4>{{ msg }}</h4>
+        {% endfor %}
+    </div>
+</div>
+```
+
+- create view function to accept data and store to database
+
+```
+def add(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        image = request.FILES['image']
+        year = request.POST['year']
+        desc = request.POST['desc']
+
+        movie = Movie(name=name, image=image, year=year, desc=desc)
+        movie.save()
+
+        messages.info(request, "Movie has been added to database")
+
+        return redirect('/add')
+
+    return render(request, 'add.html')
+```
+
 ## Example Projects
 
 The following are some sample projects created based on the above documentation.
@@ -495,3 +668,4 @@ The following are some sample projects created based on the above documentation.
 | 3 | Passing values between pages | [Go to code](https://github.com/jothomas1996/django-pass-value-page) |
 | 4 | Static Site | [Go to code](https://github.com/jothomas1996/django-static-site) |
 | 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |
+| 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |

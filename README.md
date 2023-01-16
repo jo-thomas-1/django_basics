@@ -657,6 +657,262 @@ def add(request):
     return render(request, 'add.html')
 ```
 
+### Read Data
+
+- as mentioned in the above sections, the `get()` method is used to read data from database and pass onto the template for display
+- in the view function first import the relavent models as required as `from . models import Model_name`
+- to read all records, use `Model_name.objects.all()`
+- to read a specific record or filter out a set of records, provide the search values as arguments to get method as `Model_name.objects.get(key_1=value, key_2=value, ...)`
+- update urls to link to corresponding page
+- create HTML files with placeholders to display data
+
+```
+from django.shortcuts import render
+from . models import Movie
+
+# Create your views here.
+def index(request):
+    movies = Movie.objects.all()
+    return render(request, 'index.html', {'movies': movies})
+
+def details(request, movie_id):
+    movie = Movie.objects.get(id=movie_id)
+    return render(request, 'details.html', {'movie': movie})
+```
+
+### Update Data
+
+- Update function is just a modification of the create function
+- the required record is read from database and then written back with updated values
+
+```
+def update(request, movie_id):
+    if request.method == 'POST':
+        name = request.POST['name']
+        image = request.FILES['image']
+        year = request.POST['year']
+        desc = request.POST['desc']
+
+        movie = Movie.objects.get(id=movie_id)
+        movie.name = name
+        movie.image = image
+        movie.year = year
+        movie.desc = desc
+        movie.save()
+
+        messages.info(request, "Movie has been updated")
+
+        return redirect('/update')
+
+    return render(request, 'update.html')
+```
+
+- for the above function to be implimented, an HTML file with the corresponding form needs to be created
+
+```
+{% extends 'base.html' %}
+{% block body %}
+    <div class="container mt-3">
+        <h2 class="mb-3">Edit Movie</h2>
+
+        <form class="mb-3" method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <label for="name" class="col-sm-2 col-form-label">Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="name" id="name">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="year" class="col-sm-2 col-form-label">Year</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="year" id="year">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="image" class="col-sm-2 col-form-label">Poster</label>
+                <div class="col-sm-10">
+                    <input type="file" class="form-control" name="image" id="image">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="desc" class="col-sm-2 col-form-label">Description</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" name="desc" id="desc" rows="4"></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+{% endblock %}
+```
+
+### Delete Data
+
+- the required data is read from the database and then the instance is deleted using the `delete()` method
+
+```
+def delete(request, movie_id):
+    if request.method == 'POST':
+        movie = Movie.objects.get(id=movie_id)
+        movie.delete()
+        return redirect('/')
+
+    return render(request, 'delete.html')
+```
+
+- the corresponding HTML code for getting confirmation from user for deletion is as given below
+
+```
+{% extends 'base.html' %}
+{% block body %}
+    <div class="container mt-3">
+        <h2 class="mb-3">Delete Movie</h2>
+
+        <form class="mb-3" method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            Are you sure you want to delete this movie
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-danger">Yes</button>
+                <a class="btn btn-primary" href="/" role="button">No</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+```
+
+## Forms
+
+The Django Form class is a feture by which forms can be generated and added to the application. A Django model describes the logical structure of an object, its behavior, and the way its parts are represented to us, a Django Form class describes a form and determines how it works and appears.
+
+A form’s fields are themselves classes; they manage form data and perform validation when a form is submitted. A form field is represented to a user in the browser as an HTML "widget" - a piece of user interface machinery. Each field type has an appropriate default Widget class, but these can be overridden as required.
+
+- the django form class can be used to generate forms based on models
+- more specifically, the `ModelForm` class is used as the form is being created using a model as the base
+- just as a model class’s fields map to database fields, a form class’s fields map to HTML form `<input>` elements
+- in the corresponding app, create a file `forms.py` and initialize the form
+
+```
+from django import forms
+from . models import Movie
+
+class MovieForm(forms.ModelForm):
+    class Meta:
+        model = Movie
+        fields = ['name', 'image', 'desc', 'year'] # fields of the model that are required in the form
+```
+
+- create the corresponding view function
+
+```
+from . models import Movie
+from . forms import MovieForm
+
+def edit(request, movie_id):
+    movie = Movie.objects.get(id=movie_id)
+    form = MovieForm(request.POST or None, request.FILES, instance=movie)
+    if form.is_valid():
+        form.save()
+        return redirect('/')
+
+    return render(request, 'edit.html', {'form': form, 'movie': movie})
+```
+
+- create corresponding HTML file to render the form as required
+- as it is based on the model, the form will only have fields matching the fields of the model
+- the form class does not generate the `form` tag and submit button
+- submit button for the form must be created at the end
+- it only generates code for the fields as required, all other parent, child or sibling elements must be manually created as required
+
+```
+{% extends 'base.html' %}
+{% block body %}
+    <div class="container mt-3">
+        <h2 class="mb-3">Edit Movie</h2>
+
+        <form class="mb-3" method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+{% endblock %}
+```
+
+- django offers many options to modify and render this form to obtain what is required
+- some basic reder modes are as below,
+    - `{{ form }}` will render the form exactly as it is generated
+        ```
+        <input type="hidden" name="csrfmiddlewaretoken" value="fUVp4WL7fxTg83tYIqVhoQ7j4BuooMdACwbMABNr5qdGMJDAwq8zD2tvfuxji59m">
+        
+
+        <label for="id_name">Name:</label>
+        <ul class="errorlist">
+            <li>This field is required.</li>
+        </ul>
+        <input type="text" name="name" maxlength="250" required="" id="id_name">
+
+
+        <label for="id_image">Image:</label>
+        Currently: <a href="/media/pics/bee.jpg">pics/bee.jpg</a><br>
+        Change:
+        <input type="file" name="image" accept="image/*" id="id_image">
+
+
+        <label for="id_desc">Desc:</label>
+        <ul class="errorlist">
+            <li>This field is required.</li>
+        </ul>
+        <textarea name="desc" cols="40" rows="10" required="" id="id_desc"></textarea>
+
+
+        <label for="id_year">Year:</label>
+        <ul class="errorlist">
+            <li>This field is required.</li>
+        </ul>
+        <input type="number" name="year" required="" id="id_year">
+        ```
+    - `{{ form.as_p }}` will render the form as a paragraph in the template, wrapped in `<p>` tags
+        ```
+        <input type="hidden" name="csrfmiddlewaretoken" value="XzKaOa7kPf6tzDNdAqzuy5ruKcBqCYVYkb0xkP9EF8qTdjXPoqMMNhNGV5ElwhRK">
+        
+        <ul class="errorlist">
+            <li>This field is required.</li>
+        </ul>
+        <p>
+            <label for="id_name">Name:</label>
+            <input type="text" name="name" maxlength="250" required="" id="id_name">
+        </p>
+
+
+        <p>
+            <label for="id_image">Image:</label>
+            Currently: <a href="/media/pics/bee.jpg">pics/bee.jpg</a><br>
+            Change:
+            <input type="file" name="image" accept="image/*" id="id_image">
+        </p>
+
+
+        <ul class="errorlist">
+            <li>This field is required.</li>
+        </ul>
+        <p>
+            <label for="id_desc">Desc:</label>
+            <textarea name="desc" cols="40" rows="10" required="" id="id_desc"></textarea>
+        </p>
+
+
+        <ul class="errorlist">
+            <li>This field is required.</li>
+        </ul>
+        <p>
+            <label for="id_year">Year:</label>
+            <input type="number" name="year" required="" id="id_year">
+        </p>
+        ```
+    - `{{ form.as_table }}` will render the form as table cells wrapped in `<tr>` tags
+    - `{{ form.as_ul }}` will render the form wrapped in `<li>` tags
+
 ## Example Projects
 
 The following are some sample projects created based on the above documentation.
@@ -669,3 +925,4 @@ The following are some sample projects created based on the above documentation.
 | 4 | Static Site | [Go to code](https://github.com/jothomas1996/django-static-site) |
 | 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |
 | 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |
+| 7 | CRUD Operations | [Go to code](https://github.com/jothomas1996/django-crud.git) |

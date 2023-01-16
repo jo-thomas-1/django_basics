@@ -58,6 +58,323 @@ urlpatterns = [
 ]
 ```
 
+### Class Generic View
+
+- here the views are implimented as classes
+- they help to simplify the common tasks performed in django (eg: actions performed on database)
+
+#### List View
+
+- used to list out or display all records
+- in views file import `ListView` as `from django.views.generic import ListView`
+- import the related model
+
+```
+from django.views.generic import ListView
+from . model import Model_name
+
+class TaskListView(ListView):
+    model = Model_name
+    template_name = 'home.html'
+    context_object_name = 'data_set' # name of variable used to pass data to template
+```
+
+- link the class in `urls.py`
+
+```
+path('cbv/', views.TaskListView.as_view(), name='class_based_list_view')
+```
+
+- the html template file is exactly the same
+- below is a sample of the above
+
+```
+# views.py
+
+from django.views.generic import ListView
+from . models import Task
+
+class TaskListView(ListView):
+    model = Task
+    template_name = 'home.html'
+    context_object_name = 'tasks'
+```
+
+```
+# urls.py
+
+from django.urls import path
+from . import views # importing views module from current folder
+
+app_name = "todo_app"
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('cbvhome/', views.TaskListView.as_view(), name='class_based_list_view')
+]
+```
+
+```
+<!-- home.html -->
+
+{% extends 'base.html' %}
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            {% for i in tasks %}
+            <div class="card shadow mb-2" style="width: 80%;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ i.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Priority {{ i.priority }}</h6>
+                    <p class="card-text">{{ i.date }}</p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'todo_app:delete' i.id %}" class="card-link btn btn-danger">Done</a>
+                        <a href="{% url 'todo_app:edit' i.id %}" class="card-link btn btn-warning">Update</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+
+#### Detail View
+
+- used to display specific record in detail
+- in views file import `DetailView` as `from django.views.generic.detail import DetailView`
+- import the related model
+
+```
+from django.views.generic.detail import DetailView
+from . model import Model_name
+
+class TaskDetailView(DetailView):
+    model = Model_name
+    template_name = 'home.html'
+    context_object_name = 'data_set' # name of variable used to pass data to template
+```
+
+- link the class in `urls.py`
+- here name of variable used to passed the id must be given as `pk`
+- it stands for primary key
+- if not given as `pk`, the system throws an AttributeError `Generic detail view TaskDetailView must be called with either an object pk or a slug in the URLconf.`
+
+```
+path('cbvdetail/<int:pk>', views.TaskDetailView.as_view(), name='class_based_detail_view')
+```
+
+- below is a sample for the above stated
+
+```
+# views.py
+
+from django.views.generic.detail import DetailView
+from . models import Task
+
+class TaskDetailView(DetailView):
+    model = Task
+    template_name = 'detail.html'
+    context_object_name = 'task'
+```
+
+```
+from django.urls import path
+from . import views # importing views module from current folder
+
+app_name = "todo_app"
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('cbvhome/', views.TaskListView.as_view(), name='class_based_list_view'),
+    path('cbvdetail/<int:pk>', views.TaskDetailView.as_view(), name='class_based_detail_view')
+]
+```
+
+```
+<!-- detail.html -->
+
+{% extends 'base.html' %}
+{% block body %}
+<div class="container">
+    <h1>Task in details</h1>
+    <p><b>Name:</b> {{ task.name }}</p>
+    <p><b>Priority:</b> {{ task.priority }}</p>
+    <p><b>Date:</b> {{ task.date }}</p>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{% url 'todo_app:delete' i.id %}" class="card-link btn btn-danger">Done</a>
+        <a href="{% url 'todo_app:edit' i.id %}" class="card-link btn btn-warning">Update</a>
+    </div>
+</div>
+{% endblock %}
+```
+
+#### Update View
+
+- used to update specific record
+- in views file import `UpdateView` as `from django.views.generic.edit import UpdateView`
+- import the related model
+- `reverse_lazy()` function is used to redirect once update is successfull
+- for this import `reverse_lazy` as `from django.urls import reverse_lazy`
+- if a namespace / app_name has been set up in the app's urls.py, then include the namespace when reversing - `reverse('myapp:my_url_name')`
+
+```
+from django.views.generic.edit import UpdateView
+from django.urls import reverse_lazy
+from . model import Model_name
+
+class TaskUpdateView(UpdateView):
+    model = Model_name
+    template_name = 'update.html'
+    context_object_name = 'data_set' # name of variable used to pass data to template
+    fields = ['key_1', 'key_2', 'key_3', ...] # names of the fields to be updated
+
+    def get_success_url(self):
+        # used to set desitination to go to when the update is successfull
+        return reverse_lazy('myapp:my_url_name', kwargs={'pk': self.object.id})
+```
+
+- link the class in `urls.py`
+- here name of variable used to passed the id must be given as `pk`
+
+```
+path('cbvupdate/<int:pk>', views.TaskUpdateView.as_view(), name='class_based_update_view')
+```
+
+- below is a sample for the above stated
+
+```
+# views.py
+
+from django.views.generic.edit import UpdateView
+from django.urls import reverse_lazy
+from . model import Task
+
+class TaskUpdateView(UpdateView):
+    model = Task
+    template_name = 'update.html'
+    context_object_name = 'task'
+    fields = ['name', 'priority', 'date']
+
+    def get_success_url(self):
+        return reverse_lazy('todo_app:class_based_detail_view', kwargs={'pk': self.object.id})
+```
+
+```
+from django.urls import path
+from . import views # importing views module from current folder
+
+app_name = "todo_app"
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('cbvhome/', views.TaskListView.as_view(), name='class_based_list_view'),
+    path('cbvdetail/<int:pk>', views.TaskDetailView.as_view(), name='class_based_detail_view'),
+    path('cbvupdate/<int:pk>', views.TaskUpdateView.as_view(), name='class_based_update_view')
+]
+```
+
+```
+<!-- update.html -->
+
+{% extends 'base.html' %}
+{% block body %}
+    <div class="container mt-3">
+        <h2 class="mb-3">Edit Task</h2>
+
+        <form class="mb-3" method="POST" action="">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+{% endblock %}
+```
+
+#### Delete View
+
+- used to delete a specific record
+- import for `DeleteView` is the same as `UpdateView`, that is `from django.views.generic.edit import DeleteView`
+- import the related model
+
+```
+from django.views.generic.edit import DeleteView
+from . model import Model_name
+
+class TaskDeleteView(DeleteView):
+    model = Model_name
+    template_name = 'delete.html'
+    context_object_name = 'data_set' # name of variable used to pass data to template
+    success_url = reverse_lazy('todo_app:class_based_list_view')
+```
+
+- link the class in `urls.py`
+- here name of variable used to passed the id must be given as `pk`
+
+```
+path('cbvdelete/<int:pk>', views.TaskDeleteView.as_view(), name='class_based_delete_view')
+```
+
+- below is a sample for the above stated
+
+```
+# views.py
+
+from django.views.generic.edit import UpdateView, DeleteView
+
+class TaskDeleteView(DeleteView):
+    model = Task
+    template_name = 'delete.html'
+    context_object_name = 'task'
+    success_url = reverse_lazy('todo_app:class_based_list_view')
+```
+
+```
+from django.urls import path
+from . import views # importing views module from current folder
+
+app_name = "todo_app"
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('cbvhome/', views.TaskListView.as_view(), name='class_based_list_view'),
+    path('cbvdetail/<int:pk>', views.TaskDetailView.as_view(), name='class_based_detail_view'),
+    path('cbvupdate/<int:pk>', views.TaskUpdateView.as_view(), name='class_based_update_view'),
+    path('cbvdelete/<int:pk>', views.TaskDeleteView.as_view(), name='class_based_delete_view')
+]
+```
+
+```
+<!-- delete.html -->
+
+{% extends 'base.html' %}
+{% block body %}
+    <div class="container mt-3">
+        <h2 class="mb-3">Mark task as done</h2>
+
+        <form class="mb-3" method="POST" action="">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-sm-10">
+                    Are you sure you want to mark this task as completed?
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-10">
+                    <p><b>Task:</b> {{ task.name }} [Priority {{ task.priority }}]</p>
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-danger">Yes</button>
+                <a class="btn btn-primary" href="/" role="button">No</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+```
+
 ## URL's
 
 - now this configuration needs to be linked to the main project urls
@@ -926,3 +1243,4 @@ The following are some sample projects created based on the above documentation.
 | 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |
 | 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |
 | 7 | CRUD Operations | [Go to code](https://github.com/jothomas1996/django-crud.git) |
+| 8 | Class Based Views | [Go to code](https://github.com/jothomas1996/django-class-based-views.git) |

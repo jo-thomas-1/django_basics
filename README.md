@@ -463,6 +463,71 @@ def hello_world(request):
 {% endblock %}
 ```
 
+### Importing HTML
+
+Django also offers the option to import other HTML files into a each other. This allows each section to be created separately and then later combined using include. That is `{% include 'section.html' %}`. Given below is an exmaple of the same.
+
+```
+<!-- main.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %} {% endblock %}</title>
+
+        <!-- Bootstrap -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    </head>
+    <body>
+        {% include 'header.html' %}
+        {% include 'nav.html' %}
+
+        {% block body %}
+            <!-- blocks specified as 'body' will be placed here -->
+        {% endblock %}
+
+        {% include 'footer.html' %}
+    </body>
+</html>
+```
+
+```
+<!-- header.html -->
+
+{% load static %}
+<div id="application_banner" class="container-fluid">
+    <div class="row">
+        <div class="col-1">
+            <img src="{% static 'images/icon.png' %}" alt="Shopping">
+        </div>
+        <div class="col">
+            <h1>Shopping</h1>
+        </div>
+    </div>
+</div>
+```
+
+```
+<1-- nav.html -->
+
+<nav>
+    <ul>
+        <li>Home</li>
+        <li>Admin</li>
+    </ul>
+</nav>
+```
+
+```
+<!-- footer.html -->
+
+<div>
+    <p>&copy; ABC tech pvt ltd. All rights reserved.</p>
+</div>
+```
+
 ## Passing Values
 
 - this is used to place dynamic/calculated content in the page
@@ -599,7 +664,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ```
 from django.conf.urls.static import static
-from static_site_one import settings
+from django.conf import settings
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
@@ -675,6 +740,78 @@ DATABASES = {
 - the tables can also be accessed through the django admin panel
 - when viewing the database it can be seen that django also automatically creates other tables that may be required by the system
 
+### Properties and Constraints
+
+Given below is a sample code, plced in the `models.py` file, that uses various field types along with their constraints and other applicable properties.
+
+- Field types used in the below sample are,
+    - `CharField` is used to stored string values
+    - `TextField` is used to store large text
+    - `SlugField` is used to automatically create a short label for something, containing only letters, numbers, underscores or hyphens. this data is mostly used for url's.
+    - `ImageField` is used to handle image files. it uploads and stores the file to the specified folder.
+    - `IntegerField` is used to store integer values
+    - `DecimalField` is used to store decimal values
+    - `BooleanField` is used to store boolean values `True / False`
+    - `DateTimeField` is used to store date and time
+    - `ForeignKey` is used to specify a connection to values in an other table
+
+- Constraints used in the below sample are,
+    - `max_length` accepts integer value and is used to specify the field value size
+    - `unique` accepts boolean value and is used to specify that the database column can contain only unique values
+    - `blank` accepts boolean value and is used to specify if the field can be left as blank
+    - `upload_to` accepts string value and is used on file fields to specify the location where file can be stored
+    - `max_digits` accepts integer value and is used to specify the total number of digits allowed
+    - `decimal_places` accepts integer value and is used to specify the number of values after decimal point
+    - `default` accepts string value and is used to specify a default value for the field
+    - `auto_now` accepts boolean value and is used in date fields to auto fill with current date and time
+    - `auto_now_add` accepts boolean value and is used in date fields to auto fill with date and time when data added
+    - `on_delete` is used to specify what happens when data is deleted
+
+- the meta class helps to define the propeties of the table
+    - `ordering` accepts a list of field names by which the data needs to be ordered
+    - `verbose_name` is used to provide a human redable name. if not provided django automatically generates a name
+    - `verbose_name_plural` is used to define the plural form of value provided in `verbose_name`
+
+```
+from django.db import models
+
+# Category model
+class Category(models.Model):
+    name = models.CharField(max_length=250, unique=True)
+    slug = models.SlugField(max_length=250, unique=True)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='category', blank=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'category'
+        verbose_name_plural = 'categories'
+
+    def __str__(self):
+        return self.name
+
+# Product model
+class Product(models.Model):
+    name = models.CharField(max_length=250, unique=True)
+    slug = models.SlugField(max_length=250, unique=True)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='product', blank=True)
+    stock = models.IntegerField()
+    available = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'product'
+        verbose_name_plural = 'products'
+
+    def __str__(self):
+        return self.name
+```
+
 ## Admin Panel
 
 - django provides a builtin admin panel
@@ -693,6 +830,36 @@ from . models import Model_name
 
 # Register your models here.
 admin.site.register(Model_name)
+```
+
+### Display Settings
+
+Django provides various options by which the appearence and properties of tables displayed in the Admin panel can be altered to meet the requirements. Given below is a sample code, plced in the `admin.py` file using these options. These defenitions are provided just before registering the model to the admin panel.
+
+- create a child class that inherits the functionalities from `admin.ModelAdmin` to define these requirements
+- `list_display` accepts a list of field names, which will be the only columns displayed when table is opened in admin panel. if not specifid, only one column will be diaplyed, with the records string value.
+- `list_editable` is used to make the cell directly editable without having to open the record
+- `prepopulated_fields` is used to specify that values for these fields meeds to be automatically generated when filing form in admin panel. the value for the key must be provided as list or tuple
+- `list_per_page` is used to specify how many values needs to be displayed per page
+
+```
+from django.contrib import admin
+from . models import Category, Product
+
+# Register your models here.
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug']
+    prepopulated_fields = {'slug': ['name']}
+
+admin.site.register(Category, CategoryAdmin)
+
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['name', 'price', 'stock', 'available', 'created', 'updated']
+    list_editable = ['price', 'stock', 'available']
+    prepopulated_fields = {'slug': ['name']}
+    list_per_page = 20
+
+admin.site.register(Product, ProductAdmin)
 ```
 
 ## Dynamic Data
@@ -734,6 +901,70 @@ def home(request):
 
 ```
 obj = Model_name.objects.get(preferred_key_name=preferred_id)
+```
+
+## Context Processors
+
+A context processor is a Python Django function that takes the request object as an argument and returns a dictionary that gets merged into a template context. They are used to make something available globally to all templates.
+
+- create a python file named `context_processors.py` in the required app
+- in this file, create the function that returns the required data in dictionary format
+
+```
+def function_name(request):
+    variable = 'some_value_or_data'
+    return {
+        'key_name': variable
+    }
+```
+
+- add the created context processors to the `context_processors` list within the `TEMPLATES[OPTIONS]` list in projet `settings.py` file, in the format, `[app_name].[file_name].[function_name]`
+- now the placeholder `{{ key_name }}` can be used in any template to refre to this value
+- below sample code shows how the same system can be used to get items in database into navbar items
+
+```
+# context_processors.py
+
+from . models import Category
+
+def menu_links(request):
+    links = Category.objects.all()
+    return dict(links=links)
+```
+
+```
+# update context_processors in project settings.py
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates')
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'shop.context_processors.menu_links'
+            ],
+        },
+    },
+]
+```
+
+```
+<!-- use placeholder in html template -->
+
+<nav>
+    <ul>
+        {% for category in links %}
+            <li><a href="{{ category.get_url }}">{{ category.name }}</a></li>
+        {% endfor %}
+    </ul>
+</nav>
 ```
 
 ## Account Handling
@@ -979,7 +1210,8 @@ def add(request):
 - as mentioned in the above sections, the `get()` method is used to read data from database and pass onto the template for display
 - in the view function first import the relavent models as required as `from . models import Model_name`
 - to read all records, use `Model_name.objects.all()`
-- to read a specific record or filter out a set of records, provide the search values as arguments to get method as `Model_name.objects.get(key_1=value, key_2=value, ...)`
+- to read a specific record, provide the search values as arguments to get method as `Model_name.objects.get(key_1=value, key_2=value, ...)`
+- to filter out a set of records, provide the search values as arguments to get method as `Model_name.objects.filter(key_1=value, key_2=value, ...)`
 - update urls to link to corresponding page
 - create HTML files with placeholders to display data
 
@@ -995,6 +1227,29 @@ def index(request):
 def details(request, movie_id):
     movie = Movie.objects.get(id=movie_id)
     return render(request, 'details.html', {'movie': movie})
+```
+
+#### 404 - Not Found
+
+In situations where the required object is not found, the response provided is a 404 error. The below code shows how the 404 error can be raised when the required object is not found in the database.
+
+```
+from django.http import Http404
+
+def product_view(request):
+    try:
+        product = Products.objects.get(pk=1)
+    except Products.DoesNotExist:
+        raise Http404("Given query not found....")
+```
+
+Django offers a simpler way by which the same functionality can be obtained with less lines of code. This is done by importing `get_object_or_404` from `django.shortcuts`.
+
+```
+from django.shortcuts import get_object_or_404
+
+def product_view(request):
+    product = get_object_or_404(Products, pk=3)
 ```
 
 ### Update Data
@@ -1230,6 +1485,99 @@ def edit(request, movie_id):
     - `{{ form.as_table }}` will render the form as table cells wrapped in `<tr>` tags
     - `{{ form.as_ul }}` will render the form wrapped in `<li>` tags
 
+## Pagination
+
+Pagination, also known as paging, is the process of dividing a document into sections or pages. The user can then use links such as "next", "previous", and page numbers to navigate between pages. This is commonly used when there are multiple elements to be displayed.
+
+- in `views.py` file import the corresponding libraries as `from django.core.paginator import Paginator, EmptyPage, InvalidPage`
+- create a `Paginator` object and pass the data list and number of data / elements to be displayed on a single page
+
+```
+# views.py
+
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
+
+def allProdCat(request, c_slug=None):
+    c_page = None
+    products = None
+    if c_slug != None:
+        c_page = get_object_or_404(Category, slug=c_slug)
+        products_list = Product.objects.filter(category=c_page, available=True)
+    else:
+        products_list = Product.objects.filter(available=True)
+    paginator = Paginator(products_list, 6)
+    try:
+        page = int(request.GET.get('page', '1'))
+    except:
+        page = 1
+    try:
+        products = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        products = paginator.page(paginator.num_pages)
+    return render(request, 'category.html', {'category': c_page, 'products': products})
+```
+
+```
+<!-- HTML Template -->
+
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block body %}
+    <div class="container mb-4">
+        <div class="row mt-1 g-4">
+            {% for product in products.object_list %}
+            <div class="col">
+                <div class="card" style="width: 18rem;">
+                    <a class="card-img-link" href="{{ product.get_url }}">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" width="100%">
+                    </a>
+                    <div class="card-body">
+                        <h4 class="card-product-name">{{ product.name }}</h4>
+                        <p class="card-text">&#8377; {{ product.price }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if products.paginator.num_pages > 1 %}
+        <div class="row mt-4">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="btn btn-primary previous_button {% if not products.has_previous %}disabled{% endif %}" href="?page={% if products.previous_page_number is not EmptyPage %}{{ products.previous_page_number }}{% endif %}">Previous</a>
+                    </li>
+                    {% for page in products.paginator.page_range %}
+                        <li class="page-item {% if products.number == page %}active{% endif %}">
+                            <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+                        </li>
+                    {% endfor %}
+                    <li class="page-item">
+                        <a class="btn btn-primary next_button {% if not products.has_next %}disabled{% endif %}" href="?page={% if products.next_page_number is not EmptyPage %}{{ products.next_page_number }}{% endif %}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+```
+
+Django offers many funtions and methods that can be used in pagination. Some of those commands and their return values are as follows.
+
+- `products` returns a set of pages
+- `products.object_list` returns a list containing the objects for current page
+- `products.paginator.num_pages` returns the total number of pages
+- `products.paginator.page_range` returns a range value eg: range(1, 3)
+- `products.number` returns current page number
+- `products.has_previous` returns true if there are pages prior to current page
+- `products.has_next` returns true if there are pages after current page
+- `products.previous_page_number` returns the page number for the page prior to current page
+- `products.next_page_number` returns the page number for the page after current page
+
+## Pending
+
 ## Example Projects
 
 The following are some sample projects created based on the above documentation.
@@ -1242,5 +1590,5 @@ The following are some sample projects created based on the above documentation.
 | 4 | Static Site | [Go to code](https://github.com/jothomas1996/django-static-site) |
 | 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |
 | 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |
-| 7 | CRUD Operations | [Go to code](https://github.com/jothomas1996/django-crud.git) |
-| 8 | Class Based Views | [Go to code](https://github.com/jothomas1996/django-class-based-views.git) |
+| 7 | CRUD Operations - Movie List App | [Go to code](https://github.com/jothomas1996/django-crud.git) |
+| 8 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views.git) |

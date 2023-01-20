@@ -1576,7 +1576,184 @@ Django offers many funtions and methods that can be used in pagination. Some of 
 - `products.previous_page_number` returns the page number for the page prior to current page
 - `products.next_page_number` returns the page number for the page after current page
 
-## Pending
+## Search Box
+
+This section shows how a search box can be implimented to find and display required data from database in Django.
+
+```
+# views.py
+
+from django.shortcuts import render
+from shop.models import Product
+from django.db.models import Q
+
+# Create your views here.
+def SearchResult(request):
+    products = None
+    query = None
+
+    if 'q' in request.GET:
+        query = request.GET.get('q')
+        products = Product.objects.filter(Q(name__contains=query) | Q(description__contains=query))
+        return render(request, 'search.html', {'query': query, 'products': products})
+```
+
+```
+<!-- HTML template -->
+
+{% block body %}
+    <div class="container mb-4">
+        <div class="row">
+            <h1>Search Results</h1>
+            <p>Search results for: <b>"{{ query }}"</b></p>
+        </div>
+
+        <div class="row mt-1 g-4">
+            {% for product in products %}
+            <div class="col">
+                <div class="card" style="width: 18rem;">
+                    <a class="card-img-link" href="{{ product.get_url }}">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" width="100%">
+                    </a>
+                    <div class="card-body">
+                        <h4 class="card-product-name">{{ product.name }}</h4>
+                        <p class="card-text">&#8377; {{ product.price }}</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col">
+                <p>0 results found</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+```
+
+```
+# urls.py
+
+from django.urls import path
+from . import views # importing views module from current folder
+
+app_name = "search_app"
+
+urlpatterns = [
+    path('', views.SearchResult, name='SearchResult')
+]
+```
+
+## Hosting With PythonAnywhere
+
+The following are the steps to host the django application using the services of PythonAnywhere (https://www.pythonanywhere.com/). They offer free service for about 3 months.
+
+- create an account and login
+- create and setup console
+    - go to `Consoles` page from menu
+    - from the `Start a new console` section, select `bash`
+    - enter command `pwd` to find the present working directory
+    - create a virtual environment with required version of python using the command `mkvirtualenv [name] --python=/usr/bin/python[version]`
+    - eg: `mkvirtualenv django_py_310 --python=/usr/bin/python3.10`
+    - upload project to github and get the link, eg: https://github.com/jothomas1996/django-ecom-app
+    - clone this git link with the command `git clone`
+    - eg: `git clone https://github.com/jothomas1996/django-ecom-app`
+    - use `ls` and `cd` commands to browse through files if needed
+    - goto the location of `manage.py` in project
+    - install the packages required by the project and execute commands just as it was done locally during the creation of project
+    - pip install django
+    - pip install mysql-connector-python
+    - pip install pillow
+    - pip install mysqlclient
+- obtain a domain name
+    - goto `Web` page from PythonAnywhere dashboard menu
+    - click `Add a new web app`
+    - continue with the instructions provided to obtain a domain name, eg: `username.pythonanywhere.com`
+- configure the webpage
+    - scroll down to view related details such as working directory, python version etc.
+    - in this page find and click on `WSGI configuration file`
+    - this is will show the code of the webpage that is currently being displayed in the domain name that was previously generated
+    - remove all unnecessary codes and keep only the django section
+    - remove the commenting in this section to activate the django codes
+    - find the variable `path`
+    - replace the current value given for `path` to the location of `manage.py` file of required project
+    - update the value for `os.environ['DJANGO_SETTINGS_MODULE']` to project settings file `mysite.settings`
+    - save and close
+    - click the `refresh` button for the webpage
+- allow host in project setting file
+    - goto `Files` page from PythonAnywhere dashboard menu
+    - all files and directories in the current system will be visible here
+    - click and open `settings.py` file in project
+    - in the list `ALLOWED_HOSTS` add an astric as character `'*'`
+    - this is a wildcard that would allow any host
+- setup and configure database
+    - goto `Databases` page from PythonAnywhere dashboard menu
+    - select MySQL
+    - setup a password for the database
+    - once initialization is done the configuration details will be displayed
+    - scroll down to `Create a database` section and createa database for the project
+- update the database configurations to `settings.py` file in project
+    - go to the `DATABASES` list in the `settings.py` file in project
+    - as of the now this list would look something like the below code
+
+    ```
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'django_models',
+            'USER': 'root',
+            'PASSWORD': ''
+        }
+    }
+    ```
+
+    - update the values as previously setup
+
+    ```
+    DATABASES = {
+        'default': {            
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'username$ecom_db',
+            'USER': 'username',
+            'PASSWORD': 'mysql@123',
+            'HOST': 'username.mysql.pythonanywhere-services.com'
+        }
+    }
+    ```
+
+- link the created virtual environment to the webpage
+    - goto `Web` page from PythonAnywhere dashboard menu
+    - scroll down to `Virtualenv` section
+    - enter the path and save, eg: `/home/username/virtualenvs/django_py_310`
+    - this is the path to the `virtualenvs` directory that can be viewed through the `Files` page
+- setup static files
+    - scroll down to `Static files` section
+    - add the url and directory paths
+    - url is just the same as done localy, eg: `/static/`
+    - directory path can be obtained by checking the `Files` page for the `static` folder of project, eg: `/home/username/django-ecom-app/static`
+- delete old migration files
+    - goto `Files` page from PythonAnywhere dashboard menu
+    - goto `migrations` directory in the all apps of the project
+    - delete al files except `__init__.py`
+- make migrations
+    - goto the bash console previously created
+    - execute code `python manage.py makemigrations`
+    - execute code `python manage.py migrate`
+- run the application
+    - execute code `python manage.py runserver`
+    - some times the system may show an error `Error: That port is already in use.`
+    - this is becuase the port is being used by another running service like the bash console
+    - re-execute the same command with a different port
+    - eg: `python manage.py runserver 8002`
+
+In needed to access the django admin panel, make sure to execute the command to create sure user.
+- `python manage.py createsuperuser`
+
+The following steps can be used to access the MySQL command line tool if need.
+- go to `Consoles` page from menu
+- in the `Start a new console` section, click `MySQL`
+- use command `show databases` to view list of databases
+- further commands can now be used to perform various actions
 
 ## Example Projects
 
@@ -1592,3 +1769,6 @@ The following are some sample projects created based on the above documentation.
 | 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |
 | 7 | CRUD Operations - Movie List App | [Go to code](https://github.com/jothomas1996/django-crud.git) |
 | 8 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views.git) |
+| 9 | Ecom Application | [Go to code](https://github.com/jothomas1996/django-ecom-app) [View App](https://jothomas.pythonanywhere.com/) |
+
+- Few applications from the above list are hosted through `PythonAnywhere.com` and can be viewed by clicking `View App`. These applications are avilable till `Thursday 20 April 2023`.

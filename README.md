@@ -1771,4 +1771,4 @@ The following are some sample projects created based on the above documentation.
 | 8 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views.git) |
 | 9 | Ecom Application | [Go to code](https://github.com/jothomas1996/django-ecom-app) [View App](https://jothomas.pythonanywhere.com/) |
 
-- The ecom applications from the above list is hosted through `PythonAnywhere.com` and can be viewed by clicking on `View App`. It is avilable till `Thursday 20 April 2023`.
+The e-commerce application from the above list is hosted through `PythonAnywhere.com` and can be viewed by clicking on `View App`. It is avilable till `Thursday 20 April 2023`.

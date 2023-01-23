@@ -1653,12 +1653,15 @@ The following are the steps to host the django application using the services of
     - go to `Consoles` page from menu
     - from the `Start a new console` section, select `bash`
     - enter command `pwd` to find the present working directory
+- create virtual environment for application
     - create a virtual environment with required version of python using the command `mkvirtualenv [name] --python=/usr/bin/python[version]`
     - eg: `mkvirtualenv django_py_310 --python=/usr/bin/python3.10`
+- clone project through git
     - upload project to github and get the link, eg: https://github.com/jothomas1996/django-ecom-app
     - clone this git link with the command `git clone`
     - eg: `git clone https://github.com/jothomas1996/django-ecom-app`
     - use `ls` and `cd` commands to browse through files if needed
+- install required packages
     - goto the location of `manage.py` in project
     - install the packages required by the project and execute commands just as it was done locally during the creation of project
     - pip install django
@@ -1767,8 +1770,8 @@ The following are some sample projects created based on the above documentation.
 | 4 | Static Site | [Go to code](https://github.com/jothomas1996/django-static-site) |
 | 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |
 | 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |
-| 7 | CRUD Operations - Movie List App | [Go to code](https://github.com/jothomas1996/django-crud.git) |
-| 8 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views.git) |
-| 9 | Ecom Application | [Go to code](https://github.com/jothomas1996/django-ecom-app) [View App](https://jothomas.pythonanywhere.com/) |
+| 7 | CRUD Operations - Movie List App | [Go to code](https://github.com/jothomas1996/django-crud), [View App](http://jothomas3.pythonanywhere.com/) |
+| 8 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views), [View App](http://jothomas2.pythonanywhere.com/) |
+| 9 | Ecom Application | [Go to code](https://github.com/jothomas1996/django-ecom-app), [View App](https://jothomas.pythonanywhere.com/) |
 
-The e-commerce application from the above list is hosted through `PythonAnywhere.com` and can be viewed by clicking on `View App`. It is avilable till `Thursday 20 April 2023`.
+Few applications from the above list are hosted through `PythonAnywhere.com` and can be viewed by clicking on `View App`. They are avilable till `Thursday 20 April 2023`.

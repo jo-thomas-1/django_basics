@@ -1644,6 +1644,34 @@ urlpatterns = [
 ]
 ```
 
+## Rest API
+
+REST API (also known as RESTful API) is an application programming interface (API or web API) that conforms to the constraints of REST architectural style and allows for interaction with RESTful web services.
+
+REST - Representational State Transfer
+
+API is basically a set of rules that developers create on the server-side to enable programs to communicate with each other. And REST determines how the API will look and work and what architectural pattern developers will follow to build it.
+
+In Django, this functionality is implimented by using Django REST framework.
+
+- install python package djangorestframework with command `pip install djangorestframework`
+- quickstart documentation can be found in `https://www.django-rest-framework.org/tutorial/quickstart/`
+- python package specific documentation `https://pypi.org/project/djangorestframework/`
+- create required models and corresponding viewsets
+- instead of creating separate urls file, the rest framework is imported to handle the url
+- `path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))`
+- or include urls from registered routers as `path('', include(router.urls))`
+- create serializers for the models
+
+Serializers in Django REST Framework are responsible for converting objects into data types understandable by javascript and front-end frameworks. Serializers also provide deserialization, allowing parsed data to be converted back into complex types, after first validating the incoming data.
+
+- run the server `python manage.py runserver`
+- now the application will show the default API Root page
+- this page will have all the registered contents listed below
+- click on provided link to go to specific page Viewset
+- here all existing data will be displayed along with a form to add new data
+- clicking the 'GET' button on top right corner the data can also be viewed in pure json format text
+
 ## Hosting With PythonAnywhere
 
 The following are the steps to host the django application using the services of PythonAnywhere (https://www.pythonanywhere.com/). They offer free service for about 3 months.
@@ -1771,7 +1799,9 @@ The following are some sample projects created based on the above documentation.
 | 5 | Models & Admin Page | [Go to code](https://github.com/jothomas1996/django-models) |
 | 6 | Account Handling | [Go to code](https://github.com/jothomas1996/django-account-handling) |
 | 7 | CRUD Operations - Movie List App | [Go to code](https://github.com/jothomas1996/django-crud), [View App](http://jothomas3.pythonanywhere.com/) |
-| 8 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views), [View App](http://jothomas2.pythonanywhere.com/) |
-| 9 | Ecom Application | [Go to code](https://github.com/jothomas1996/django-ecom-app), [View App](https://jothomas.pythonanywhere.com/) |
+| 8 | Static Site Two - Travel App | [Go to code](https://github.com/jothomas1996/django-static-site-two), [View App](http://jothomas4.pythonanywhere.com/) |
+| 9 | Class Based Views - Todo App | [Go to code](https://github.com/jothomas1996/django-class-based-views), [View App](http://jothomas2.pythonanywhere.com/) |
+| 10 | Ecom Application | [Go to code](https://github.com/jothomas1996/django-ecom-app), [View App](https://jothomas.pythonanywhere.com/) |
+| 11 | REST API | [Go to code](https://github.com/jothomas1996/django-rest-api) |
 
 Few applications from the above list are hosted through `PythonAnywhere.com` and can be viewed by clicking on `View App`. They are avilable till `Thursday 20 April 2023`.
